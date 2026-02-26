@@ -317,9 +317,19 @@ function setDefaultFirstVisitState() {
 
 async function loadRestaurantsList() {
   try {
-    const resp = await fetch("/api/restaurants");
+    const resp = await fetch("/api/restaurants", { cache: "no-store" });
     const data = await resp.json();
-    restaurantsList = Array.isArray(data) ? data : [];
+
+    // podporujeme oba formáty:
+    // 1) starý: API vrací přímo pole restaurací
+    // 2) nový: API vrací objekt { restaurants: [...], updatedAt: ... }
+    if (Array.isArray(data)) {
+      restaurantsList = data;
+    } else if (data && Array.isArray(data.restaurants)) {
+      restaurantsList = data.restaurants;
+    } else {
+      restaurantsList = [];
+    }
   } catch {
     restaurantsList = [];
   }
@@ -489,12 +499,7 @@ function openSuggestion() {
 }
 
 function openAdmin() {
-  const PASSWORD = "H3510";
-  const entered = prompt("Zadej heslo pro administraci:");
-  if (entered !== PASSWORD) {
-    alert("Špatné heslo.");
-    return;
-  }
+  // Heslo se řeší až v admin.html (ať se to neptá 2×)
   window.location.href = "/admin.html";
 }
 
